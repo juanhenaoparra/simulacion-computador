@@ -15,7 +15,7 @@ class TextStorageApp:
 
         # Objeto para guardar el texto
         self.text_storage = ""
-        
+
     def save_text(self):
         # Guardar cada línea del cuadro de texto en un array (lista)
         self.text_storage = self.text_box.get("1.0", tk.END).strip().splitlines()

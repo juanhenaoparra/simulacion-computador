@@ -20,5 +20,5 @@ class Codods:
             return "0111"
         else:
             return "instruccion no valida"
-        
+
 #montar las instrucciones faltantes

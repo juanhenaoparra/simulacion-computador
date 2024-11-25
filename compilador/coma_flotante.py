@@ -7,7 +7,7 @@ class Codificador:
         Convierte un número decimal a un formato de coma flotante de 30 o 20 bits.
         - Si `flag` es 0, se convierte a 30 bits.
         - Si `flag` es 1, se convierte a 20 bits.
-        
+
         Parámetros:
         - flag (int): 0 para 30 bits, 1 para 20 bits.
         - number (float): El número decimal a convertir.
@@ -15,15 +15,15 @@ class Codificador:
         Retorna:
         - str: Representación binaria del número en formato de 30 o 20 bits.
         """
-        
+
         # Convertir el número decimal a representación IEEE 754 de 32 bits
         binary_32bit = f"{struct.unpack('>I', struct.pack('>f', number))[0]:032b}"
-        
+
         # Separar el bit de signo, exponente y mantisa
         sign = binary_32bit[0]              # 1 bit de signo
         exponent = int(binary_32bit[1:9], 2)  # Exponente original de 8 bits
         mantissa = binary_32bit[9:]         # Mantisa original de 23 bits
-        
+
         # Sesgos para los formatos personalizados
         bias_30bit = 63     # 2^(7-1) - 1
         bias_20bit = 7      # 2^(4-1) - 1
