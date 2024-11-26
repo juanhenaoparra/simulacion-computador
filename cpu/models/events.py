@@ -27,7 +27,7 @@ class EventBus:
         resource_type: [] for resource_type in ResourceType
     }
     _executor = ThreadPoolExecutor(max_workers=10)
-    _debug = True
+    _debug = False
 
     @classmethod
     def set_debug(cls, debug: bool) -> None:

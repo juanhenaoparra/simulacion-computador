@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Callable
+
 from cpu.models.directions import binary_to_number
 from cpu.models.events import EventBus, ResourceChange, ResourceType
 
@@ -10,14 +12,23 @@ class MemoryType(str, Enum):
 
 
 class Memory:
-    def __init__(self, type: MemoryType):
+    def __init__(self, type: MemoryType, filter=None):
         self.type = type
         self.memory = {}
 
+        if filter is None:
+            self.subscribe(
+                ResourceType.BUS,
+                lambda change: change.event == f"fetch_{self.type.value}",
+            )
+        else:
+            self.subscribe(ResourceType.BUS, filter)
+
+    def subscribe(self, resource_type: ResourceType, filter: Callable = None):
         EventBus.subscribe(
-            ResourceType.BUS,
+            resource_type,
             self.receive,
-            lambda change: change.event == f"fetch_{self.type.value}",
+            filter=filter,
         )
 
     def receive(self, change: ResourceChange):

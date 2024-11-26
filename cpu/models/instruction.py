@@ -29,6 +29,7 @@ class OperandDirection(str, Enum):
 class Operand:
     value: str
     direction: OperandDirection
+    cache: str
 
     def __init__(self, value: str, direction: str):
         self.value = value
@@ -37,6 +38,9 @@ class Operand:
             raise ValueError(f"La dirección del operando {direction} no es válida")
 
         self.direction = OperandDirection(direction)
+
+    def cache_value(self, v):
+        self.cache = v
 
 
 class Instruction:

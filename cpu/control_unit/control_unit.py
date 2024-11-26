@@ -7,6 +7,13 @@ from cpu.memory.memory import MemoryType
 from cpu.control_unit.mar import MemoryAddressRegister
 from cpu.control_unit.mbr import MemoryBufferRegister, MBRNoneValueException
 from cpu.models.events import EventBus, ResourceChange, ResourceType
+from cpu.models.instruction import OperandDirection
+
+OPERANDS_DIRECTIONS_MAP = {
+    OperandDirection.IMMEDIATE: None,
+    OperandDirection.REGISTER: MemoryType.REGISTER,
+    OperandDirection.DIRECT: MemoryType.DATA,
+}
 
 
 class ControlUnitMode(str, Enum):
@@ -52,10 +59,12 @@ class ControlUnit:
             EventBus.reset_listeners()
 
     def execute_instruction(self):
+        self.notify("fetch_instruction_started", None)
         self.fetch_instruction()
         self.decode_instruction()
         self.fetch_operands()
         self.execute()
+        self.notify("fetch_instruction_finished", None)
 
     def fetch_instruction(self):
         instruction_position = self.program_counter.get_position_direction()
@@ -79,7 +88,21 @@ class ControlUnit:
         return self.ir
 
     def fetch_operands(self):
-        pass
+        for operand in self.ir.operands:
+            memory_type = OPERANDS_DIRECTIONS_MAP[operand.direction]
+
+            if memory_type is None:
+                operand.cache_value(operand.value)
+                continue
+
+            self.bus_control.send(
+                "send_command",
+                command=Commands.FETCH_VALUE,
+                type=memory_type,
+                address=operand.value,
+            )
+
+            operand.cache_value(self.mbr.get_value())
 
     def execute(self):
         pass
@@ -89,3 +112,11 @@ class ControlUnit:
 
     def notify(self, event: str, metadata: dict):
         EventBus.notify(ResourceChange(ResourceType.CU, event, metadata))
+
+    def fetch_operand(self, memory_type: MemoryType, address: int):
+        self.bus_control.send(
+            "send_command",
+            command=Commands.FETCH_VALUE,
+            type=memory_type,
+            address=address,
+        )
