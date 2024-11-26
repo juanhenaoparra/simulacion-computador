@@ -6,6 +6,7 @@ from cpu.models.events import EventBus, ResourceChange, ResourceType
 class MemoryType(str, Enum):
     DATA = "DATA"
     PROGRAM = "PROGRAM"
+    REGISTER = "REGISTER"
 
 
 class Memory:

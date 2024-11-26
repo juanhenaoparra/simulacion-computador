@@ -27,7 +27,7 @@ class Bus:
             ResourceChange(
                 resource_type=ResourceType.BUS,
                 event=event,
-                metadata={"type": self.type, **kwargs},
+                metadata={"bus_type": self.type, **kwargs},
             )
         )
 

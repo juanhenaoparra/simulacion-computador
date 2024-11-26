@@ -65,7 +65,12 @@ class ControlUnit:
             command=Commands.OPEN_PROGRAM_MEMORY,
         )
 
-        self.mar.set_value(MemoryType.PROGRAM, instruction_position)
+        self.bus_control.send(
+            "send_command",
+            command=Commands.FETCH_VALUE,
+            type=MemoryType.PROGRAM,
+            address=instruction_position,
+        )
 
         self.program_counter.increment()
 
