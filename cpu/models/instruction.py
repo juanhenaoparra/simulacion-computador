@@ -110,6 +110,10 @@ class InstructionHandler:
             return ALU.mul(operand_1, operand_2)
         elif instruction.codop == CodOp.DIV:
             return ALU.div(operand_1, operand_2)
+        else:
+            raise InstructionNotImplemented(
+                f"La ALU no implementa la operación {instruction.codop}"
+            )
 
     @classmethod
     def handle_move(cls, instruction: Instruction):
