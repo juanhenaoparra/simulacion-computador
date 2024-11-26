@@ -7,37 +7,48 @@ class Compilador:
         self.codods = []
 
     def tipoinstruccion(self, tipo):
-        return Codods.tipoinstruccion(tipo)
+        """Obtiene el código binario de una instrucción a partir de su tipo."""
+        binario=Codods.tipoinstruccion(tipo)
+        return binario
 
-    def convertir_comaflotante(flag, numero):
-        return Codificador.decimal_to_custom_float_format(flag, numero)
+    @staticmethod
+    def convertir_comaflotante(data):
+        """Convierte datos a un formato de coma flotante personalizado."""
+        ComaFlotante= Codificador.decimal_to_custom_float_format(data)
+        return ComaFlotante
 
-    def separador(array):
-        # Expresión regular para validar líneas
+    def separador(self, array):
+        """
+        Separa las instrucciones y sus operandos de un arreglo de cadenas.
+
+        Parámetros:
+        - array (list): Lista de cadenas con instrucciones y operandos.
+
+        Retorna:
+        - tuple: (lista de instrucciones, lista de operandos).
+
+        Si hay un error en la validación, imprime el error y retorna None.
+        """
         pattern = re.compile(r"^([A-Z]+)\s+((?:\w+|\[\w+\])(?:,\s*(?:\w+|\[\w+\]))*)$")
-        # Arreglos separados para instrucciones y operandos
-        codods = []
-        operandos_list = []
-        indicadores = []
         instrucciones = []
+        operandos_list = []
+
         for index, line in enumerate(array):
             match = pattern.match(line)
             if not match:
                 print(f"Error en la posición {index}: {line}")
-                return  # Interrumpir si hay un error
+                return None  # Interrumpir si hay un error
 
-            codods, operandos = match.groups()
+            instruccion, operandos = match.groups()
             operandos = [op.strip() for op in operandos.split(",")]  # Separar y limpiar operandos
 
             # Validar número de operandos
             if len(operandos) < 2 or len(operandos) > 3:
                 print(f"Error en la posición {index}: Número inválido de operandos ({len(operandos)})")
-                return  # Interrumpir si el número de operandos es incorrecto
+                return None  # Interrumpir si el número de operandos es incorrecto
 
-            # Guardar instrucción y operandos en arreglos
-            codods.append(codods)
+            # Guardar instrucción y operandos en listas
+            instrucciones.append(instruccion)
             operandos_list.append(operandos)
 
-            # Determinar indicador según número de operandos
-            indicador = 1 if len(operandos) == 3 else 0
-            indicadores.append(indicador)
+        return instrucciones, operandos_list

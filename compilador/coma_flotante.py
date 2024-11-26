@@ -2,57 +2,71 @@ import struct
 
 class Codificador:
     @staticmethod
-    def decimal_to_custom_float_format(flag, number):
+    def decimal_to_custom_float_format(data):
         """
-        Convierte un número decimal a un formato de coma flotante de 30 o 20 bits.
-        - Si `flag` es 0, se convierte a 30 bits.
-        - Si `flag` es 1, se convierte a 20 bits.
+        Convierte un array de números decimales o cadenas a un formato de coma flotante personalizado.
+
+        Formato:
+        - 1 bit de signo, 7 bits de exponente, 20 bits de mantisa.
+        - Prefijos personalizados: '01', '10', '00' según el elemento.
 
         Parámetros:
-        - flag (int): 0 para 30 bits, 1 para 20 bits.
-        - number (float): El número decimal a convertir.
+        - data (list): Lista de números o cadenas a convertir.
 
         Retorna:
-        - str: Representación binaria del número en formato de 30 o 20 bits.
+        - list: Lista de representaciones binarias en el formato personalizado.
         """
+        def get_prefix(character):
+            """Determina el prefijo según el formato del elemento."""
+            if character.startswith('R'):
+                return '01'
+            elif character.startswith('['):
+                return '10'
+            elif character[0].isdigit():
+                return '00'
+            else:
+                raise ValueError(f"Caracter no válido para determinar el prefijo: {character}")
 
-        # Convertir el número decimal a representación IEEE 754 de 32 bits
-        binary_32bit = f"{struct.unpack('>I', struct.pack('>f', number))[0]:032b}"
+        def clean_element(element):
+            """Elimina 'R' al inicio y corchetes alrededor del elemento."""
+            if element.startswith('R'):
+                element = element[1:]  # Eliminar la 'R' al principio
+            if element.startswith('[') and element.endswith(']'):
+                element = element[1:-1]  # Eliminar corchetes
+            return element
 
-        # Separar el bit de signo, exponente y mantisa
-        sign = binary_32bit[0]              # 1 bit de signo
-        exponent = int(binary_32bit[1:9], 2)  # Exponente original de 8 bits
-        mantissa = binary_32bit[9:]         # Mantisa original de 23 bits
+        results = []
 
-        # Sesgos para los formatos personalizados
-        bias_30bit = 63     # 2^(7-1) - 1
-        bias_20bit = 7      # 2^(4-1) - 1
-        exponent_bias = 127  # Sesgo original de IEEE 754 de 32 bits
+        for element in data:
+            prefix = get_prefix(element)  # Determinar prefijo inicial
+            # Limpiar el elemento de 'R' y corchetes
+            cleaned_element = clean_element(str(element))
 
-        if flag == 0:  # Convertir a 30 bits
-            # Ajustar el exponente para 30 bits
-            adjusted_exponent = max(0, min((exponent - exponent_bias) + bias_30bit, 127))
-            exponent_30bit = f"{adjusted_exponent:07b}"  # Exponente de 7 bits
-            mantissa_30bit = mantissa[:22]               # Mantisa de 22 bits
+            # Verificar si el elemento estaba entre corchetes y contiene una 'R'
+            if element != cleaned_element and 'R' in cleaned_element:
+                print(f"Elemento con 'R' encontrado dentro de corchetes, procesando de nuevo: {cleaned_element}")
+                # Llamar de nuevo al método para procesar el elemento dentro de los corchetes
+                return Codificador.decimal_to_custom_float_format([cleaned_element])  # Recursión
 
-            # Formar la representación de 30 bits
-            custom_30bit = sign + exponent_30bit + mantissa_30bit
-            return custom_30bit
+            try:
+                number = float(cleaned_element)  # Convertir a número si es posible
+                binary_32bit = f"{struct.unpack('>I', struct.pack('>f', number))[0]:032b}"
 
-        elif flag == 1:  # Convertir a 20 bits
-            # Ajustar el exponente para 20 bits
-            adjusted_exponent = max(0, min((exponent - exponent_bias) + bias_20bit, 15))
-            exponent_20bit = f"{adjusted_exponent:04b}"  # Exponente de 4 bits
-            mantissa_20bit = mantissa[:15]               # Mantisa de 15 bits
+                # Descomponer la representación binaria
+                sign = binary_32bit[0]  # 1 bit de signo
+                exponent = int(binary_32bit[1:9], 2)  # Exponente original
+                mantissa = binary_32bit[9:]  # Mantisa original
 
-            # Formar la representación de 20 bits
-            custom_20bit = sign + exponent_20bit + mantissa_20bit
-            return custom_20bit
+                # Ajustar exponente y mantisa al formato personalizado
+                bias_custom = 63  # Sesgo para el nuevo formato
+                adjusted_exponent = max(0, min((exponent - 127) + bias_custom, 127))
+                exponent_custom = f"{adjusted_exponent:07b}"
+                mantissa_custom = mantissa[:20]
 
-        else:
-            raise ValueError("Flag inválido. Usa 0 para 30 bits o 1 para 20 bits.")
+                # Formar la representación final
+                custom_float = prefix + sign + exponent_custom + mantissa_custom
+                results.append(custom_float)
+            except ValueError:
+                raise ValueError(f"Elemento no numérico o inválido: {element}")
 
-
-
-
-
+        return results
