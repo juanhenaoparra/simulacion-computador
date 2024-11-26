@@ -7,7 +7,7 @@ from cpu.memory.memory import MemoryType
 from cpu.control_unit.mar import MemoryAddressRegister
 from cpu.control_unit.mbr import MemoryBufferRegister, MBRNoneValueException
 from cpu.models.events import EventBus, ResourceChange, ResourceType
-from cpu.models.instruction import OperandDirection
+from cpu.models.instruction import OperandDirection, InstructionHandler
 
 OPERANDS_DIRECTIONS_MAP = {
     OperandDirection.IMMEDIATE: None,
@@ -105,7 +105,8 @@ class ControlUnit:
             operand.cache_value(self.mbr.get_value())
 
     def execute(self):
-        pass
+        result = InstructionHandler.exec(self.ir)
+        print(f"--> instruction: {self.ir.codop}\n\tresult: {result}")
 
     def stop(self):
         self.running = False

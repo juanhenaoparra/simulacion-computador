@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List
 
 from cpu.models.events import ResourceChange, ResourceType, EventBus
+from cpu.models.directions import binary_to_number
 
 INSTRUCTION_SIZE = 64
 CODOP_SIZE = 4
@@ -38,6 +39,9 @@ class Operand:
             raise ValueError(f"La dirección del operando {direction} no es válida")
 
         self.direction = OperandDirection(direction)
+
+    def get_cached_value(self):
+        return self.cache
 
     def cache_value(self, v):
         self.cache = v
@@ -84,4 +88,36 @@ class Instruction:
 
             self.operands.append(
                 Operand(value=operand_value, direction=operand_direction)
+            )
+
+
+class InstructionNotImplemented(Exception):
+    pass
+
+
+class InstructionHandler:
+    @classmethod
+    def handle_add(cls, instruction: Instruction):
+        numbers = []
+        # TODO: Implementar ALU
+        print("Adding instruction: ", instruction)
+
+        for operand in instruction.operands:
+            numbers.append(binary_to_number(operand.get_cached_value()))
+
+        return sum(numbers)
+
+    @classmethod
+    def handle_move(cls, instruction: Instruction):
+        print("Moving instruction: ", instruction)
+
+    @classmethod
+    def exec(cls, instruction: Instruction):
+        if instruction.codop == CodOp.ADD:
+            return cls.handle_add(instruction)
+        elif instruction.codop == CodOp.MOVE:
+            return cls.handle_move(instruction)
+        else:
+            raise InstructionNotImplemented(
+                f"La instrucción {instruction.codop} no ha sido implementada"
             )
