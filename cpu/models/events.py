@@ -29,9 +29,10 @@ class EventBus:
 
     @classmethod
     def notify(cls, change: ResourceChange) -> None:
+        # print(f"-> Notifying change: {change.event} with {change.metadata}")
+
         if cls._listeners.get(change.resource_type) is None:
             return
 
         for listener in cls._listeners[change.resource_type]:
-            # print(f"-> Notifying change: {change.event} with {change.metadata}")
             listener(change)
