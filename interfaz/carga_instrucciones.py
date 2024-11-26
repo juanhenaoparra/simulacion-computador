@@ -1,5 +1,10 @@
 import tkinter as tk
 from compilador.compilador import Compilador
+from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
+from cpu.memory.memory import Memory, MemoryType
+from cpu.models.events import EventBus
+from cpu.models.directions import number_to_binary
+
 
 class TextStorageApp:
     def __init__(self, root):
@@ -41,16 +46,17 @@ class TextStorageApp:
             # Procesar el texto ingresado para separar instrucciones y operandos
             resultado = comp.separador(self.text_storage)
             if resultado:
-                instrucciones, operandos = resultado
-
-                # Procesar y mostrar la primera instrucción y su primer operando
-                primera_instruccion = comp.tipoinstruccion(instrucciones[0])
-                primer_operando = comp.convertir_comaflotante([operandos[0][0]])[0]
-
-                print(f"Primera instrucción: {primera_instruccion}")
-                print(f"Primer operando: {primer_operando}")
-                print(f"Instrucciones: {instrucciones}")
-                print(f"Operandos: {operandos}")
+                instrucciones_raw, operandos_raw = resultado
+                instrucciones_procesadas = []
+                operandos=""
+                for i in range(0, len(instrucciones_raw)):
+                    instruccion = comp.tipoinstruccion(instrucciones_raw[i])
+                    operandos =comp.convertir_comaflotante(operandos_raw[i])
+                    instrucciones_procesadas.append(instruccion+operandos[0]+operandos[1])
+                    
+                # Mostrar resultados en la consola
+                print(f"Instrucciones procesadas: {instrucciones_procesadas}")
+                print(f"Texto original: {self.text_storage}")
 
                 self.message_label.config(text="Texto procesado correctamente.", fg="green")
             else:
@@ -59,8 +65,18 @@ class TextStorageApp:
             print(f"Error: {e}")
             self.message_label.config(text=f"Error al procesar: {e}", fg="red")
 
-        # Mostrar el texto guardado en la consola
-        print(f"Texto guardado: {self.text_storage}")
+        # Escribir en la memoria y ejecutar la unidad de control
+        try:
+            mp = Memory(MemoryType.PROGRAM)
+            for i in range(0, len(instrucciones_procesadas)):
+                mp.write(number_to_binary(i,28),instrucciones_procesadas[i])
+            EventBus.set_debug(True)
+            control_unit = ControlUnit()
+            control_unit.run(mode=ControlUnitMode.RUN, delay=3)
+        except Exception as e:
+            print(f"Error al inicializar CPU: {e}")
+            self.message_label.config(text=f"Error al inicializar CPU: {e}", fg="red")
+
 
 # Crear la ventana principal
 if __name__ == "__main__":
