@@ -6,6 +6,7 @@ from cpu.bus.bus import Bus, BusType, Commands
 from cpu.memory.memory import MemoryType
 from cpu.control_unit.mar import MemoryAddressRegister
 from cpu.control_unit.mbr import MemoryBufferRegister, MBRNoneValueException
+from cpu.models.events import EventBus, ResourceChange, ResourceType
 
 
 class ControlUnitMode(str, Enum):
@@ -34,19 +35,24 @@ class ControlUnit:
             else:
                 while self.running:
                     self.execute_instruction()
-                time.sleep(delay)
+
+                    if delay > 0:
+                        time.sleep(delay)
+
         except MBRNoneValueException:
-            print(
-                "Program finished at instruction: ",
-                self.program_counter.get_position_direction(),
+            EventBus.notify(
+                ResourceChange(
+                    ResourceType.CU,
+                    "program_finished",
+                    {"position": self.program_counter.get_position_direction()},
+                ),
             )
+
+            EventBus.reset_listeners()
 
     def execute_instruction(self):
         self.fetch_instruction()
         self.decode_instruction()
-        print(
-            f"Current IR state: {self.ir.codop} with: {', '.join([op.direction.name + '[' + op.value + ']' for op in self.ir.operands])}"
-        )
         self.fetch_operands()
         self.execute()
 
