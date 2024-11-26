@@ -38,8 +38,10 @@ class EventBus:
         cls._listeners = {resource_type: [] for resource_type in ResourceType}
 
     @classmethod
-    def subscribe(cls, resource_type: ResourceType, listener: Callable) -> None:
-        cls._listeners[resource_type].append(listener)
+    def subscribe(
+        cls, resource_type: ResourceType, listener: Callable, filter: Callable = None
+    ) -> None:
+        cls._listeners[resource_type].append({"listener": listener, "filter": filter})
 
     @classmethod
     def notify(cls, change: ResourceChange) -> None:
@@ -54,8 +56,15 @@ class EventBus:
         futures = []
 
         for listener in cls._listeners[change.resource_type]:
-            future = cls._executor.submit(listener, change)
+            future = cls._executor.submit(
+                filter_change, listener["filter"], listener["listener"], change
+            )
             futures.append(future)
 
         for future in futures:
             future.result()
+
+
+def filter_change(filterFn: Callable, listenerFn: Callable, change: ResourceChange):
+    if filterFn is None or filterFn(change):
+        listenerFn(change)

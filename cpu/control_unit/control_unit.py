@@ -25,7 +25,10 @@ class ControlUnit:
         self.running = True
         self.notify("program_started", None)
         self.program_counter = ProgramCounter()
-        self.bus_control = Bus(BusType.CONTROL)
+        self.bus_control = Bus(
+            BusType.CONTROL,
+            lambda change: change.event == f"response_{BusType.CONTROL.value}",
+        )
         self.mar = MemoryAddressRegister()
         self.mbr = MemoryBufferRegister()
 
@@ -57,10 +60,12 @@ class ControlUnit:
     def fetch_instruction(self):
         instruction_position = self.program_counter.get_position_direction()
 
-        self.bus_control.send(Commands.OPEN_PROGRAM_MEMORY)
+        self.bus_control.send(
+            "send_command",
+            command=Commands.OPEN_PROGRAM_MEMORY,
+        )
 
         self.mar.set_value(MemoryType.PROGRAM, instruction_position)
-        self.mar.dispatch()
 
         self.program_counter.increment()
 

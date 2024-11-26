@@ -13,19 +13,22 @@ class Memory:
         self.type = type
         self.memory = {}
 
-        EventBus.subscribe(ResourceType.BUS, self.receive)
+        EventBus.subscribe(
+            ResourceType.BUS,
+            self.receive,
+            lambda change: change.event == f"fetch_{self.type.value}",
+        )
 
     def receive(self, change: ResourceChange):
-        if change.event == f"fetch_{self.type.value}":
-            value = self.read(change.metadata["address"])
+        value = self.read(change.metadata["address"])
 
-            EventBus.notify(
-                ResourceChange(
-                    ResourceType.BUS,
-                    f"response_memory_{self.type.value}",
-                    {"value": value, "type": self.type},
-                )
+        EventBus.notify(
+            ResourceChange(
+                ResourceType.BUS,
+                f"response_memory_{self.type.value}",
+                {"value": value, "type": self.type},
             )
+        )
 
     def read(self, direction: str):
         direction_number = binary_to_number(direction)
