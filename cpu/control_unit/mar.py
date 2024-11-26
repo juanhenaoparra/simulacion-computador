@@ -11,6 +11,14 @@ class MemoryAddressRegister:
         self.value = value
         self.type = type
 
+        EventBus.notify(
+            ResourceChange(
+                resource_type=ResourceType.MAR,
+                event="set_value",
+                metadata={"value": value, "type": type},
+            )
+        )
+
     def get_type(self):
         return self.type
 

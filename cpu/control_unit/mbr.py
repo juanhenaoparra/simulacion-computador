@@ -17,6 +17,14 @@ class MemoryBufferRegister:
             self.value = change.metadata["value"]
             self.type = change.metadata["type"]
 
+            EventBus.notify(
+                ResourceChange(
+                    resource_type=ResourceType.MBR,
+                    event="set_value",
+                    metadata={"value": self.value, "type": self.type},
+                )
+            )
+
     def get_value(self):
         if self.value == "":
             raise Exception("memory buffer register is empty")
