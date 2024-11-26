@@ -2,6 +2,7 @@ import tkinter as tk
 from compilador.compilador import Compilador
 from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
 from cpu.memory.memory import Memory, MemoryType
+from cpu.memory.register import Register
 from cpu.models.events import EventBus
 from cpu.models.directions import number_to_binary
 
@@ -48,37 +49,50 @@ class TextStorageApp:
             if resultado:
                 instrucciones_raw, operandos_raw = resultado
                 instrucciones_procesadas = []
-                operandos=""
+                operandos = ""
                 for i in range(0, len(instrucciones_raw)):
                     instruccion = comp.tipoinstruccion(instrucciones_raw[i])
-                    operandos =comp.convertir_comaflotante(operandos_raw[i])
-                    instrucciones_procesadas.append(instruccion+operandos[0]+operandos[1])
-                    
-                # Mostrar resultados en la consola
-                print(f"Instrucciones procesadas: {instrucciones_procesadas}")
-                print(f"Texto original: {self.text_storage}")
+                    operandos = comp.convertir_comaflotante(operandos_raw[i])
+                    instrucciones_procesadas.append(
+                        instruccion + operandos[0] + operandos[1]
+                    )
 
-                self.message_label.config(text="Texto procesado correctamente.", fg="green")
+                self.message_label.config(
+                    text="Texto procesado correctamente.", fg="green"
+                )
             else:
-                self.message_label.config(text="Error al procesar el texto. Verifica la entrada.", fg="red")
+                self.message_label.config(
+                    text="Error al procesar el texto. Verifica la entrada.", fg="red"
+                )
         except Exception as e:
             print(f"Error: {e}")
             self.message_label.config(text=f"Error al procesar: {e}", fg="red")
 
-        # Escribir en la memoria y ejecutar la unidad de control
         try:
+            print("instrucciones a procesar: ", instrucciones_procesadas)
             mp = Memory(MemoryType.PROGRAM)
             for i in range(0, len(instrucciones_procesadas)):
-                mp.write(number_to_binary(i,28),instrucciones_procesadas[i])
-            EventBus.set_debug(True)
+                mp.write(number_to_binary(i, 28), instrucciones_procesadas[i])
+
+            md = Memory(MemoryType.DATA)
+            md.write(number_to_binary(1, 28), number_to_binary(10, 64))
+            md.write(number_to_binary(2, 28), number_to_binary(20, 64))
+            md.write(number_to_binary(3, 28), number_to_binary(30, 64))
+            md.write(number_to_binary(4, 28), number_to_binary(40, 64))
+
+            mr = Register()
+            mr.write(number_to_binary(1, 28), number_to_binary(100, 64))
+            mr.write(number_to_binary(2, 28), number_to_binary(200, 64))
+
+            EventBus.set_debug(False)
+
             control_unit = ControlUnit()
-            control_unit.run(mode=ControlUnitMode.RUN, delay=3)
+            control_unit.run(mode=ControlUnitMode.RUN, delay=1)
         except Exception as e:
             print(f"Error al inicializar CPU: {e}")
             self.message_label.config(text=f"Error al inicializar CPU: {e}", fg="red")
 
 
-# Crear la ventana principal
 if __name__ == "__main__":
     root = tk.Tk()
     app = TextStorageApp(root)
