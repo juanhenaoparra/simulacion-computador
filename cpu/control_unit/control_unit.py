@@ -23,6 +23,7 @@ class ControlUnit:
 
     def __init__(self):
         self.running = True
+        self.notify("program_started", None)
         self.program_counter = ProgramCounter()
         self.bus_control = Bus(BusType.CONTROL)
         self.mar = MemoryAddressRegister()
@@ -40,12 +41,9 @@ class ControlUnit:
                         time.sleep(delay)
 
         except MBRNoneValueException:
-            EventBus.notify(
-                ResourceChange(
-                    ResourceType.CU,
-                    "program_finished",
-                    {"position": self.program_counter.get_position_direction()},
-                ),
+            self.notify(
+                "program_finished",
+                {"position": self.program_counter.get_position_direction()},
             )
 
             EventBus.reset_listeners()
@@ -78,3 +76,6 @@ class ControlUnit:
 
     def stop(self):
         self.running = False
+
+    def notify(self, event: str, metadata: dict):
+        EventBus.notify(ResourceChange(ResourceType.CU, event, metadata))
