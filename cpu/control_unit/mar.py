@@ -47,6 +47,7 @@ class MemoryAddressRegister:
         self.bus_directions.send(
             f"fetch_{self.type.value}",
             command=Commands.FETCH_VALUE,
+            type=self.type,
             address=self.value,
         )
 

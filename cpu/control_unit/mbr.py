@@ -7,8 +7,7 @@ class MBRNoneValueException(Exception):
 
 class MemoryBufferRegister:
     def __init__(self):
-        self.type = ""
-        self.value = ""
+        self.response_queue = []
 
         EventBus.subscribe(
             ResourceType.BUS,
@@ -17,24 +16,31 @@ class MemoryBufferRegister:
         )
 
     def set_value(self, change: ResourceChange):
-        self.value = change.metadata["value"]
-        self.type = change.metadata["type"]
+        t = change.metadata["type"]
+        value = change.metadata["value"]
+
+        self.push_value(t, value)
 
         EventBus.notify(
             ResourceChange(
                 resource_type=ResourceType.MBR,
                 event="set_value",
-                metadata={"value": self.value, "type": self.type},
+                metadata={"value": value, "type": t},
             )
         )
 
+    def push_value(self, type, value):
+        self.response_queue.append({"type": type, "value": value})
+
     def get_value(self):
-        if self.value == "":
+        try:
+            first_element = self.response_queue.pop(0)
+        except Exception:
             raise Exception("memory buffer register is empty")
 
-        if self.value is None:
+        value = first_element.get("value")
+
+        if value is None:
             raise MBRNoneValueException("none value in memory buffer register")
 
-        value = self.value
-        self.value = ""
         return value
