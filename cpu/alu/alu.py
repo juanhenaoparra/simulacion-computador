@@ -1,6 +1,6 @@
 from cpu.models.directions import binary_to_number, number_to_binary
-from cpu.models.instruction import INSTRUCTION_SIZE
 from cpu.models.events import EventBus, ResourceChange, ResourceType
+from cpu.models.constants import INSTRUCTION_SIZE
 
 
 class ALU:

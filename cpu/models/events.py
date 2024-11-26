@@ -11,8 +11,7 @@ class ResourceType(str, Enum):
     MBR = "mbr"
     PC = "pc"
     CU = "cu"
-    # MEMORY_PROGRAM = "memory_program"
-    # MEMORY_DATA = "memory_data"
+    ALU = "alu"
 
 
 @dataclass
@@ -41,7 +40,9 @@ class EventBus:
     def subscribe(
         cls, resource_type: ResourceType, listener: Callable, filter: Callable = None
     ) -> None:
-        cls._listeners[resource_type].append({"listener": listener, "filter": filter})
+        subscription = {"listener": listener, "filter": filter}
+        if subscription not in cls._listeners[resource_type]:
+            cls._listeners[resource_type].append(subscription)
 
     @classmethod
     def notify(cls, change: ResourceChange) -> None:
