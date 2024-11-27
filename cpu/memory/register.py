@@ -8,7 +8,10 @@ class Register(Memory):
             MemoryType.REGISTER,
             lambda change: (
                 change.event == "send_command"
-                and change.metadata.get("command") == Commands.FETCH_VALUE
                 and change.metadata.get("type") == MemoryType.REGISTER
+                and (
+                    change.metadata.get("command") == Commands.FETCH_VALUE
+                    or change.metadata.get("command") == Commands.STORE_VALUE
+                )
             ),
         )

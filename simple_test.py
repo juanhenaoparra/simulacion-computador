@@ -25,8 +25,8 @@ def main():
     mp.write(
         number_to_binary(1, 28),
         CodOp.ADD.value
-        + OperandDirection.DIRECT.value
-        + number_to_binary(1, 28)  # value available in memory in position 3
+        + OperandDirection.REGISTER.value
+        + number_to_binary(1, 28)  # value available in register in position 1
         + OperandDirection.DIRECT.value
         + number_to_binary(4, 28),  # value available in memory in position 4
     )
@@ -49,8 +49,13 @@ def main():
     control_unit.stop()
 
     assert (
-        binary_to_number(md.read(number_to_binary(1, 28))) == 240
-    )  # already moved operation
+        binary_to_number(md.read(number_to_binary(1, 28))) == 200
+    )  # assert move operation
+
+    print(mr.read(number_to_binary(1, 28)))
+    assert (
+        binary_to_number(mr.read(number_to_binary(1, 28))) == 140
+    )  # assert add operation
 
 
 main()
