@@ -1,7 +1,7 @@
 from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
 from cpu.memory.register import Register
 from cpu.memory.memory import Memory, MemoryType
-from cpu.models.directions import number_to_binary
+from cpu.models.directions import number_to_binary, binary_to_number
 from cpu.models.events import EventBus
 from cpu.models.instruction import OperandDirection, CodOp
 
@@ -16,8 +16,8 @@ def main():
     mp = Memory(MemoryType.PROGRAM)
     mp.write(
         number_to_binary(0, 28),  # instruction at 0
-        CodOp.MOVE.value,
-        +OperandDirection.DIRECT.value
+        CodOp.MOVE.value
+        + OperandDirection.DIRECT.value
         + number_to_binary(1, 28)  # value available in memory in position 1
         + OperandDirection.REGISTER.value
         + number_to_binary(2, 28),  # value available in memory in position 2
@@ -26,7 +26,7 @@ def main():
         number_to_binary(1, 28),
         CodOp.ADD.value
         + OperandDirection.DIRECT.value
-        + number_to_binary(3, 28)  # value available in memory in position 3
+        + number_to_binary(1, 28)  # value available in memory in position 3
         + OperandDirection.DIRECT.value
         + number_to_binary(4, 28),  # value available in memory in position 4
     )
@@ -45,7 +45,14 @@ def main():
 
     control_unit = ControlUnit()
     print("Running...")
-    control_unit.run(mode=ControlUnitMode.RUN, delay=2)
+    control_unit.run(mode=ControlUnitMode.RUN, delay=0)
+    control_unit.stop()
+
+    assert (
+        binary_to_number(md.read(number_to_binary(1, 28))) == 200
+    )  # already moved operation
+
+    # TODO: assert add in register
 
 
 main()
