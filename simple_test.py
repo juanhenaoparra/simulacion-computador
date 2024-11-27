@@ -3,7 +3,7 @@ from cpu.memory.register import Register
 from cpu.memory.memory import Memory, MemoryType
 from cpu.models.directions import number_to_binary
 from cpu.models.events import EventBus
-from cpu.models.instruction import OperandDirection
+from cpu.models.instruction import OperandDirection, CodOp
 
 ###
 # ADD R1, R2
@@ -16,15 +16,15 @@ def main():
     mp = Memory(MemoryType.PROGRAM)
     mp.write(
         number_to_binary(0, 28),  # instruction at 0
-        "0100"
-        + OperandDirection.DIRECT.value
+        CodOp.MOVE.value,
+        +OperandDirection.DIRECT.value
         + number_to_binary(1, 28)  # value available in memory in position 1
         + OperandDirection.REGISTER.value
         + number_to_binary(2, 28),  # value available in memory in position 2
     )
     mp.write(
         number_to_binary(1, 28),
-        "0000"
+        CodOp.ADD.value
         + OperandDirection.DIRECT.value
         + number_to_binary(3, 28)  # value available in memory in position 3
         + OperandDirection.DIRECT.value
@@ -41,11 +41,11 @@ def main():
     mr.write(number_to_binary(1, 28), number_to_binary(100, 64))
     mr.write(number_to_binary(2, 28), number_to_binary(200, 64))
 
-    EventBus.set_debug(False)
+    EventBus.set_debug(True)
 
     control_unit = ControlUnit()
     print("Running...")
-    control_unit.run(mode=ControlUnitMode.RUN, delay=0)
+    control_unit.run(mode=ControlUnitMode.RUN, delay=2)
 
 
 main()

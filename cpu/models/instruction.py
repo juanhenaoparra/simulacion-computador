@@ -8,6 +8,8 @@ from cpu.models.constants import (
     OPERAND_SIZE,
 )
 from cpu.models.events import ResourceChange, ResourceType, EventBus
+from cpu.bus.bus import Commands, BusType
+from cpu.memory.memory import MemoryType
 from cpu.alu.alu import ALU
 
 
@@ -31,6 +33,7 @@ class OperandDirection(str, Enum):
 class Operand:
     value: str
     direction: OperandDirection
+    memory_type: MemoryType
     cache: str
 
     def __init__(self, value: str, direction: str):
@@ -46,6 +49,12 @@ class Operand:
 
     def cache_value(self, v):
         self.cache = v
+
+    def set_memory_type(self, memory_type: MemoryType):
+        self.memory_type = memory_type
+
+    def get_memory_type(self):
+        return self.memory_type
 
 
 class Instruction:
@@ -117,7 +126,28 @@ class InstructionHandler:
 
     @classmethod
     def handle_move(cls, instruction: Instruction):
-        print("Moving instruction: ", instruction)
+        if len(instruction.operands) != 2:
+            raise ValueError("La instrucción MOVE debe tener dos operandos")
+
+        destination = instruction.operands[0].value
+        destination_memory_type = instruction.operands[0].get_memory_type()
+        source_value = instruction.operands[1].get_cached_value()
+
+        EventBus.notify(
+            ResourceChange(
+                resource_type=ResourceType.BUS,
+                event="send_command",
+                metadata={
+                    "bus_type": BusType.DIRECTIONS,  # HACK: To be able to write it should travel through the data bus
+                    "type": destination_memory_type,
+                    "command": Commands.STORE_VALUE,
+                    "address": destination,
+                    "value": source_value,
+                },
+            )
+        )
+
+        return source_value
 
     @classmethod
     def exec(cls, instruction: Instruction):

@@ -90,6 +90,7 @@ class ControlUnit:
     def fetch_operands(self):
         for operand in self.ir.operands:
             memory_type = OPERANDS_DIRECTIONS_MAP[operand.direction]
+            operand.set_memory_type(memory_type)
 
             if memory_type is None:
                 operand.cache_value(operand.value)
@@ -105,6 +106,7 @@ class ControlUnit:
             operand.cache_value(self.mbr.get_value())
 
     def execute(self):
+        print(f"--> starting execution of instruction: {self.ir.codop}")
         result = InstructionHandler.exec(self.ir)
         print(f"--> instruction: {self.ir.codop}\n\tresult: {result}")
 

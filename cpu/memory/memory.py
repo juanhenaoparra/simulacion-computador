@@ -3,6 +3,7 @@ from typing import Callable
 
 from cpu.models.directions import binary_to_number
 from cpu.models.events import EventBus, ResourceChange, ResourceType
+from cpu.bus.bus import Commands, BusType
 
 
 class MemoryType(str, Enum):
@@ -19,7 +20,13 @@ class Memory:
         if filter is None:
             self.subscribe(
                 ResourceType.BUS,
-                lambda change: change.event == f"fetch_{self.type.value}",
+                lambda change: change.metadata.get("type") == self.type
+                and change.metadata.get("bus_type")
+                == BusType.DIRECTIONS  # temporary to be able to fetch data when store
+                and (
+                    change.metadata.get("command") == Commands.FETCH_VALUE
+                    or change.metadata.get("command") == Commands.STORE_VALUE
+                ),
             )
         else:
             self.subscribe(ResourceType.BUS, filter)
@@ -32,15 +39,26 @@ class Memory:
         )
 
     def receive(self, change: ResourceChange):
-        value = self.read(change.metadata["address"])
+        if change.metadata.get("command") == Commands.FETCH_VALUE:
+            value = self.read(change.metadata["address"])
 
-        EventBus.notify(
-            ResourceChange(
-                ResourceType.BUS,
-                f"response_memory_{self.type.value}",
-                {"value": value, "type": self.type},
+            EventBus.notify(
+                ResourceChange(
+                    ResourceType.BUS,
+                    f"response_memory_{self.type.value}",
+                    {"value": value, "type": self.type},
+                )
             )
-        )
+        elif change.metadata.get("command") == Commands.STORE_VALUE:
+            self.write(change.metadata["address"], change.metadata["value"])
+
+            EventBus.notify(
+                ResourceChange(
+                    ResourceType.BUS,
+                    f"write_memory_{self.type.value}",
+                    {"value": change.metadata["value"], "type": self.type},
+                )
+            )
 
     def read(self, direction: str):
         direction_number = binary_to_number(direction)

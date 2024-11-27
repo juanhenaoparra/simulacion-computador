@@ -14,6 +14,7 @@ class Commands(str, Enum):
     OPEN_PROGRAM_MEMORY = "open_program_memory"
     OPEN_DATA_MEMORY = "open_data_memory"
     FETCH_VALUE = "fetch_value"
+    STORE_VALUE = "store_value"
 
 
 class Bus:
