@@ -14,6 +14,16 @@ from cpu.alu.alu import ALU
 
 
 class CodOp(str, Enum):
+    """
+    Codigos de operación.
+    1. Las operaciones aritméticas y lógicas son las únicas que pueden ser ejecutadas por la ALU.
+      1. La ALU guardara en la dirección del primer operando el resultado de la operación. Sobreescribiendo su valor.
+      2. Por ende el primer operando debe ser un registro o una posición de memoria.
+    2. La instruccion MOVE copiara el valor del segundo operando en la dirección del primer operando.
+      1. Por ende el primer operando debe ser un registro o una posición de memoria.
+      2. Y el segundo operando puede ser un valor inmediato, un registro o una posición de memoria.
+    """
+
     ADD = "0000"
     SUB = "0001"
     MUL = "0010"
@@ -108,26 +118,57 @@ class InstructionNotImplemented(Exception):
 class InstructionHandler:
     @classmethod
     def handle_alu(cls, instruction: Instruction):
+        if len(instruction.operands) != 2:
+            raise ValueError("La instrucción aritmética debe tener dos operandos")
+
+        if instruction.operands[0].direction == OperandDirection.IMMEDIATE:
+            raise ValueError(
+                "El primer operando de una instrucción aritmética no puede ser inmediato"
+            )
+
         operand_1 = instruction.operands[0].get_cached_value()
         operand_2 = instruction.operands[1].get_cached_value()
 
+        result = None
+
         if instruction.codop == CodOp.ADD:
-            return ALU.add(operand_1, operand_2)
+            result = ALU.add(operand_1, operand_2)
         elif instruction.codop == CodOp.SUB:
-            return ALU.sub(operand_1, operand_2)
+            result = ALU.sub(operand_1, operand_2)
         elif instruction.codop == CodOp.MUL:
-            return ALU.mul(operand_1, operand_2)
+            result = ALU.mul(operand_1, operand_2)
         elif instruction.codop == CodOp.DIV:
-            return ALU.div(operand_1, operand_2)
+            result = ALU.div(operand_1, operand_2)
         else:
             raise InstructionNotImplemented(
                 f"La ALU no implementa la operación {instruction.codop}"
             )
 
+        EventBus.notify(
+            ResourceChange(
+                resource_type=ResourceType.BUS,
+                event="send_command",
+                metadata={
+                    "bus_type": BusType.DIRECTIONS,  # HACK: To be able to write it should travel through the data bus
+                    "type": instruction.operands[0].get_memory_type(),
+                    "command": Commands.STORE_VALUE,
+                    "address": instruction.operands[0].value,
+                    "value": result,
+                },
+            )
+        )
+
+        return result
+
     @classmethod
     def handle_move(cls, instruction: Instruction):
         if len(instruction.operands) != 2:
             raise ValueError("La instrucción MOVE debe tener dos operandos")
+
+        if instruction.operands[0].direction == OperandDirection.IMMEDIATE:
+            raise ValueError(
+                "El primer operando de una instrucción MOVE no puede ser inmediato"
+            )
 
         destination = instruction.operands[0].value
         destination_memory_type = instruction.operands[0].get_memory_type()

@@ -49,10 +49,8 @@ def main():
     control_unit.stop()
 
     assert (
-        binary_to_number(md.read(number_to_binary(1, 28))) == 200
+        binary_to_number(md.read(number_to_binary(1, 28))) == 240
     )  # already moved operation
-
-    # TODO: assert add in register
 
 
 main()
