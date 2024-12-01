@@ -103,7 +103,10 @@ class ControlUnit:
                 address=operand.value,
             )
 
-            operand.cache_value(self.mbr.get_value())
+            try:
+                operand.cache_value(self.mbr.get_value())
+            except Exception:
+                operand.cache_value(None)
 
     def execute(self):
         print(f"--> starting execution of instruction: {self.ir.codop}")
