@@ -1,7 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass
 from typing import List, Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 
 class ResourceType(str, Enum):
@@ -63,7 +63,11 @@ class EventBus:
             futures.append(future)
 
         for future in futures:
-            future.result()
+            try:
+                future.result(timeout=1.5)
+            except TimeoutError:
+                print(f"Task: {future} took too long...")
+                future.cancel()
 
 
 def filter_change(filterFn: Callable, listenerFn: Callable, change: ResourceChange):
