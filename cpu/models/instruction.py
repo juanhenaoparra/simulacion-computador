@@ -9,8 +9,9 @@ from cpu.models.constants import (
 )
 from cpu.models.events import ResourceChange, ResourceType, EventBus
 from cpu.bus.bus import Commands, BusType
-from cpu.memory.memory import MemoryType
+from cpu.memory.memory import MemoryType, Memory
 from cpu.alu.alu import ALU
+from cpu.models.directions import interpretar_flotante_a_binario, binary_to_number
 
 
 class CodOp(str, Enum):
@@ -70,6 +71,7 @@ class Operand:
 class Instruction:
     codop: CodOp
     operands: List[Operand]
+    
 
     def __init__(self, instruction: str):
         self.validate_instruction(instruction)
@@ -116,6 +118,20 @@ class InstructionNotImplemented(Exception):
 
 
 class InstructionHandler:
+    registros = Memory(MemoryType.REGISTER)
+
+    # Vincula un evento para llenar el objeto `registros`
+    EventBus.subscribe(
+        ResourceType.BUS,
+        lambda change: InstructionHandler.crear_lista_registros(change),
+        lambda change: change.event == "send_command",
+    )
+    @classmethod
+    def crear_lista_registros(cls, change: ResourceChange):
+        if change.metadata["command"] == Commands.STORE_VALUE and change.metadata["type"] == MemoryType.REGISTER:
+            address =change.metadata["address"]
+            value = change.metadata["value"]
+            cls.registros.write(address, value)
     @classmethod
     def handle_alu(cls, instruction: Instruction):
         if len(instruction.operands) != 2:
@@ -126,12 +142,18 @@ class InstructionHandler:
                 "El primer operando de una instrucción aritmética no puede ser inmediato"
             )
 
-        operand_1 = instruction.operands[0].get_cached_value()
-        operand_2 = instruction.operands[1].get_cached_value()
+        operand_1 = cls.registros.read(instruction.operands[0].value)
+        operand_2 = instruction.operands[1].value
+        print(operand_2)
+        print(operand_1)
+        
 
         result = None
 
         if instruction.codop == CodOp.ADD:
+            print("este es el tamañaño de operand_2", len(operand_2))   
+            operand_1 = interpretar_flotante_a_binario(operand_1)
+            operand_2 = interpretar_flotante_a_binario(operand_2)
             result = ALU.add(operand_1, operand_2)
         elif instruction.codop == CodOp.SUB:
             result = ALU.sub(operand_1, operand_2)
@@ -198,6 +220,7 @@ class InstructionHandler:
             or instruction.codop == CodOp.MUL
             or instruction.codop == CodOp.DIV
         ):
+            print("esta es la instruccion", instruction)
             return cls.handle_alu(instruction)
         elif instruction.codop == CodOp.MOVE:
             return cls.handle_move(instruction)

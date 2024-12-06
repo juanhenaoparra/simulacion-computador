@@ -1,4 +1,4 @@
-from cpu.models.directions import binary_to_number, number_to_binary
+from cpu.models.directions import binary_to_number, number_to_binary, number_coma_flotante
 from cpu.models.events import EventBus, ResourceChange, ResourceType
 from cpu.models.constants import INSTRUCTION_SIZE
 
@@ -6,9 +6,9 @@ from cpu.models.constants import INSTRUCTION_SIZE
 class ALU:
     @classmethod
     def add(cls, a: str, b: str):
-        val = number_to_binary(
-            binary_to_number(a) + binary_to_number(b), INSTRUCTION_SIZE
-        )
+        
+        val = binary_to_number(a) + binary_to_number(b)
+        val = number_coma_flotante(val)
 
         cls.notify(
             "alu_result",
@@ -24,9 +24,8 @@ class ALU:
 
     @classmethod
     def sub(cls, a: str, b: str):
-        val = number_to_binary(
-            binary_to_number(a) - binary_to_number(b), INSTRUCTION_SIZE
-        )
+        val = binary_to_number(a) - binary_to_number(b)
+        val = number_coma_flotante(val)
 
         cls.notify(
             "alu_result",
@@ -37,9 +36,8 @@ class ALU:
 
     @classmethod
     def mul(cls, a: str, b: str):
-        val = number_to_binary(
-            binary_to_number(a) * binary_to_number(b), INSTRUCTION_SIZE
-        )
+        val = binary_to_number(a) * binary_to_number(b)
+        val = number_coma_flotante(val)
 
         cls.notify(
             "alu_result",
@@ -50,9 +48,8 @@ class ALU:
 
     @classmethod
     def div(cls, a: str, b: str):
-        val = number_to_binary(
-            binary_to_number(a) / binary_to_number(b), INSTRUCTION_SIZE
-        )
+        val = binary_to_number(a) / binary_to_number(b)
+        val = number_coma_flotante(val)
 
         cls.notify(
             "alu_result",

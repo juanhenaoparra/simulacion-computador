@@ -12,6 +12,7 @@ class ResourceType(str, Enum):
     PC = "pc"
     CU = "cu"
     ALU = "alu"
+    INT = "int"
 
 
 @dataclass
@@ -64,7 +65,7 @@ class EventBus:
 
         for future in futures:
             try:
-                future.result(timeout=1.5)
+                future.result(timeout=1.5)  
             except TimeoutError:
                 print(f"Task: {future} took too long...")
                 future.cancel()

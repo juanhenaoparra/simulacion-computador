@@ -47,26 +47,42 @@ class Codificador:
                 print(f"Elemento con 'R' encontrado dentro de corchetes, procesando de nuevo: {cleaned_element}")
                 # Llamar de nuevo al método para procesar el elemento dentro de los corchetes
                 return Codificador.decimal_to_custom_float_format([cleaned_element])  # Recursión
+            if prefix == '10' or prefix == '01':
+               #creame un try y un except para manejar los errores donde trate de comvertir el cleaned_element a binario
+                try:
+                    # Intentar convertir el cleaned_element a binario
+                    binary_value = bin(int(cleaned_element))
+                    custom_float = prefix + binary_value[2:].zfill(28)# Rellenar con ceros a 27 bits
+                    results.append(custom_float)
+                except ValueError:
+                    # Manejar errores si cleaned_element no es convertible a entero
+                    print(f"Error: '{cleaned_element}' no es un número válido para convertir a binario.")
+                except TypeError:
+                    # Manejar errores si cleaned_element tiene un tipo no válido
+                    print(f"Error: Tipo inválido para cleaned_element ({type(cleaned_element)}).")
+                except Exception as e:
+                    # Manejo genérico para cualquier otro tipo de error
+                    print(f"Ocurrió un error inesperado: {e}")
+            else:       
+                try:
+                    number = float(cleaned_element)  # Convertir a número si es posible
+                    binary_32bit = f"{struct.unpack('>I', struct.pack('>f', number))[0]:032b}"
 
-            try:
-                number = float(cleaned_element)  # Convertir a número si es posible
-                binary_32bit = f"{struct.unpack('>I', struct.pack('>f', number))[0]:032b}"
+                    # Descomponer la representación binaria
+                    sign = binary_32bit[0]  # 1 bit de signo
+                    exponent = int(binary_32bit[1:9], 2)  # Exponente original
+                    mantissa = binary_32bit[9:]  # Mantisa original
 
-                # Descomponer la representación binaria
-                sign = binary_32bit[0]  # 1 bit de signo
-                exponent = int(binary_32bit[1:9], 2)  # Exponente original
-                mantissa = binary_32bit[9:]  # Mantisa original
+                    # Ajustar exponente y mantisa al formato personalizado
+                    bias_custom = 63  # Sesgo para el nuevo formato
+                    adjusted_exponent = max(0, min((exponent - 127) + bias_custom, 127))
+                    exponent_custom = f"{adjusted_exponent:07b}"
+                    mantissa_custom = mantissa[:20]
 
-                # Ajustar exponente y mantisa al formato personalizado
-                bias_custom = 63  # Sesgo para el nuevo formato
-                adjusted_exponent = max(0, min((exponent - 127) + bias_custom, 127))
-                exponent_custom = f"{adjusted_exponent:07b}"
-                mantissa_custom = mantissa[:20]
-
-                # Formar la representación final
-                custom_float = prefix + sign + exponent_custom + mantissa_custom
-                results.append(custom_float)
-            except ValueError:
-                raise ValueError(f"Elemento no numérico o inválido: {element}")
+                    # Formar la representación final
+                    custom_float = prefix + sign + exponent_custom + mantissa_custom
+                    results.append(custom_float)
+                except ValueError:
+                    raise ValueError(f"Elemento no numérico o inválido: {element}")
 
         return results
