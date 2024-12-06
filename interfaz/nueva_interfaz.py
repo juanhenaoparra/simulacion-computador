@@ -225,19 +225,19 @@ class TextStorageApp(QMainWindow):
                     """
                     Inicializa los eventos de `ControlUnit` después de cargar la memoria.
                     """
-                    #try:
-                    mp = Memory(MemoryType.PROGRAM)
-                    for i, instruccion in enumerate(instrucciones_procesadas):
-                        mp.write(number_to_binary(i, 28), instruccion)
+                    try:
+                        mp = Memory(MemoryType.PROGRAM)
+                        for i, instruccion in enumerate(instrucciones_procesadas):
+                            mp.write(number_to_binary(i, 28), instruccion)
 
-                    control_unit = ControlUnit()
-                    EventBus.set_debug(True)
-                    control_unit.run(mode=ControlUnitMode.RUN, delay=1)
-                    self.imprimir_eventos()
-                    #except Exception as e:
-                        #print(f"Error al inicializar CPU: {e}")
-                        #self.message_label.setText(f"Error al inicializar CPU: {e}")
-                        #self.message_label.setStyleSheet("color: red;")
+                        control_unit = ControlUnit()
+                        EventBus.set_debug(True)
+                        control_unit.run(mode=ControlUnitMode.RUN, delay=1)
+                        self.imprimir_eventos()
+                    except Exception as e:
+                        print(f"Error al inicializar CPU: {e}")
+                        self.message_label.setText(f"Error al inicializar CPU: {e}")
+                        self.message_label.setStyleSheet("color: red;")
 
                 # Actualizar memoria de programa y luego inicializar eventos
                 self.update_label_memory(instrucciones_procesadas, callback=initialize_events)
