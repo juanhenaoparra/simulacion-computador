@@ -11,7 +11,7 @@ from cpu.models.events import ResourceChange, ResourceType, EventBus
 from cpu.bus.bus import Commands, BusType
 from cpu.memory.memory import MemoryType, Memory
 from cpu.alu.alu import ALU
-from cpu.models.directions import interpretar_flotante_a_binario, binary_to_number
+from cpu.models.directions import interpretar_flotante_a_decimal, binary_to_number
 
 
 class CodOp(str, Enum):
@@ -144,16 +144,12 @@ class InstructionHandler:
 
         operand_1 = cls.registros.read(instruction.operands[0].value)
         operand_2 = instruction.operands[1].value
-        print(operand_2)
-        print(operand_1)
+        operand_1 = interpretar_flotante_a_decimal(operand_1)
+        operand_2 = interpretar_flotante_a_decimal(operand_2)
         
-
         result = None
 
-        if instruction.codop == CodOp.ADD:
-            print("este es el tamañaño de operand_2", len(operand_2))   
-            operand_1 = interpretar_flotante_a_binario(operand_1)
-            operand_2 = interpretar_flotante_a_binario(operand_2)
+        if instruction.codop == CodOp.ADD: 
             result = ALU.add(operand_1, operand_2)
         elif instruction.codop == CodOp.SUB:
             result = ALU.sub(operand_1, operand_2)

@@ -5,9 +5,9 @@ from cpu.models.constants import INSTRUCTION_SIZE
 
 class ALU:
     @classmethod
-    def add(cls, a: str, b: str):
+    def add(cls, a: float, b: float):
         
-        val = binary_to_number(a) + binary_to_number(b)
+        val = a + b
         val = number_coma_flotante(val)
 
         cls.notify(
@@ -23,8 +23,8 @@ class ALU:
         return val
 
     @classmethod
-    def sub(cls, a: str, b: str):
-        val = binary_to_number(a) - binary_to_number(b)
+    def sub(cls, a: float, b: float):
+        val = a -b
         val = number_coma_flotante(val)
 
         cls.notify(
@@ -35,8 +35,8 @@ class ALU:
         return val
 
     @classmethod
-    def mul(cls, a: str, b: str):
-        val = binary_to_number(a) * binary_to_number(b)
+    def mul(cls, a: float, b: float):
+        val = a * b
         val = number_coma_flotante(val)
 
         cls.notify(
@@ -47,8 +47,8 @@ class ALU:
         return val
 
     @classmethod
-    def div(cls, a: str, b: str):
-        val = binary_to_number(a) / binary_to_number(b)
+    def div(cls, a: float, b: float):
+        val = a / b
         val = number_coma_flotante(val)
 
         cls.notify(
