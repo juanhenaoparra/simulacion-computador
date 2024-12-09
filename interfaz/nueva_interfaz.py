@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt, QCoreApplication, QTimer
 from compilador.compilador import Compilador
 from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
 from cpu.memory.memory import Memory, MemoryType
+from cpu.memory.register import Register
 from cpu.models.events import EventBus, ResourceChange, ResourceType
 from cpu.models.directions import number_to_binary
 from cpu.bus.bus import Commands, BusType
@@ -20,6 +21,8 @@ class TextStorageApp(QMainWindow):
         self.init_ui()
         self.text_storage = []
         self.mp = Memory(MemoryType.PROGRAM)
+        self.md = Memory(MemoryType.DATA)
+        self.mr = Register()
         self.control_unit = ControlUnit()
         self.instrucciones_procesadas = []
         self.comp = Compilador()

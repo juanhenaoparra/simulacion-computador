@@ -118,7 +118,6 @@ class InstructionNotImplemented(Exception):
 
 
 class InstructionHandler:
-    registros = Memory(MemoryType.REGISTER)
 
     # Vincula un evento para llenar el objeto `registros`
     EventBus.subscribe(
@@ -131,7 +130,6 @@ class InstructionHandler:
         if change.metadata["command"] == Commands.STORE_VALUE and change.metadata["type"] == MemoryType.REGISTER:
             address =change.metadata["address"]
             value = change.metadata["value"]
-            cls.registros.write(address, value)
     @classmethod
     def handle_alu(cls, instruction: Instruction):
         if len(instruction.operands) != 2:
@@ -142,7 +140,7 @@ class InstructionHandler:
                 "El primer operando de una instrucción aritmética no puede ser inmediato"
             )
 
-        operand_1 = cls.registros.read(instruction.operands[0].value)
+        operand_1 = instruction.operands[0].get_cached_value()
         operand_2 = instruction.operands[1].value
         operand_1 = interpretar_flotante_a_decimal(operand_1)
         operand_2 = interpretar_flotante_a_decimal(operand_2)
