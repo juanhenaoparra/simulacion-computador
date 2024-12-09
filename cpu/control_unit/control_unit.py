@@ -39,7 +39,7 @@ class ControlUnit:
         self.mar = MemoryAddressRegister()
         self.mbr = MemoryBufferRegister()
 
-    def run(self, mode: ControlUnitMode = ControlUnitMode.STEP, delay: int = 1):
+    def run(self, mode: ControlUnitMode = ControlUnitMode.STEP, delay: int = 0.5):
         try:
             if mode == ControlUnitMode.STEP:
                 self.execute_instruction()
@@ -57,6 +57,16 @@ class ControlUnit:
             )
 
             EventBus.reset_listeners()
+    def reset(self):
+        self.running = True
+        self.notify("program_started", None)
+        self.program_counter = ProgramCounter()
+        self.bus_control = Bus(
+            BusType.CONTROL,
+            lambda change: change.event == f"response_{BusType.CONTROL.value}",
+        )
+        self.mar = MemoryAddressRegister()
+        self.mbr = MemoryBufferRegister()
 
     def execute_instruction(self):
         self.notify("fetch_instruction_started", None)

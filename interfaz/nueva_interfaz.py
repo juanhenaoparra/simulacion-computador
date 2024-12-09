@@ -19,6 +19,10 @@ class TextStorageApp(QMainWindow):
         self.setGeometry(100, 100, 800, 500)
         self.init_ui()
         self.text_storage = []
+        self.mp = Memory(MemoryType.PROGRAM)
+        self.control_unit = ControlUnit()
+        self.instrucciones_procesadas = []
+        self.comp = Compilador()
         # Suscripción a eventos de registros
         EventBus.subscribe(ResourceType.MAR,self.crear_lista_eventos,lambda change: change.event == "set_value",)
         EventBus.subscribe(ResourceType.MBR, self.crear_lista_eventos)
@@ -73,7 +77,7 @@ class TextStorageApp(QMainWindow):
         left_layout.addWidget(self.cu_label, 1, 2, 1, 2)  # Fila 1, Columnas 2-3
 
         # PC y MAR
-        self.pc = QLabel("PC: 00")
+        self.pc = QLabel("PC: 0000000000000000000000000000")
         self.pc.setAlignment(Qt.AlignCenter)
         self.pc.setStyleSheet("background-color: #6CCFF6; padding: 5px;")
         self.pc.setFixedSize(220, 50)  # Ancho: 220px, Alto: 50px
@@ -176,6 +180,7 @@ class TextStorageApp(QMainWindow):
         button_layout.addWidget(self.save_button)
 
         self.next_button = QPushButton("Next")
+        self.next_button.clicked.connect(self.next_text)
         button_layout.addWidget(self.next_button)
 
         self.load_button = QPushButton("Load")
@@ -198,49 +203,18 @@ class TextStorageApp(QMainWindow):
         text_layout.addWidget(self.message_label)  # Agregar al layout
         
     def save_text(self):
-        """
-        Procesa el texto del cuadro de texto y lo carga en memoria,
-        actualizando primero las etiquetas antes de inicializar los eventos.
-        """
-        raw_text = self.text_box.toPlainText().strip()
-        if not raw_text:
-            self.message_label.setText("El cuadro de texto está vacío.")
-            self.message_label.setStyleSheet("color: red;")
-            return
-
-        self.text_storage = raw_text.splitlines()
-        comp = Compilador()
-
+        self.text_storage = self.reconocer_texto()
         try:
-            resultado = comp.separador(self.text_storage)
+            resultado = self.comp.separador(self.text_storage)
             if resultado:
                 instrucciones_raw, operandos_raw = resultado
-                instrucciones_procesadas = []
                 for i in range(len(instrucciones_raw)):
-                    instruccion = comp.tipoinstruccion(instrucciones_raw[i])
-                    operandos = comp.convertir_comaflotante(operandos_raw[i])
-                    instrucciones_procesadas.append(instruccion + operandos[0] + operandos[1])
-
-                def initialize_events():
-                    """
-                    Inicializa los eventos de `ControlUnit` después de cargar la memoria.
-                    """
-                    try:
-                        mp = Memory(MemoryType.PROGRAM)
-                        for i, instruccion in enumerate(instrucciones_procesadas):
-                            mp.write(number_to_binary(i, 28), instruccion)
-
-                        control_unit = ControlUnit()
-                        EventBus.set_debug(True)
-                        control_unit.run(mode=ControlUnitMode.RUN, delay=1)
-                        self.imprimir_eventos()
-                    except Exception as e:
-                        print(f"Error al inicializar CPU: {e}")
-                        self.message_label.setText(f"Error al inicializar CPU: {e}")
-                        self.message_label.setStyleSheet("color: red;")
-
+                    instruccion = self.comp.tipoinstruccion(instrucciones_raw[i])
+                    operandos = self.comp.convertir_comaflotante(operandos_raw[i])
+                    self.instrucciones_procesadas.append(instruccion + operandos[0] + operandos[1])
+                    
                 # Actualizar memoria de programa y luego inicializar eventos
-                self.update_label_memory(instrucciones_procesadas, callback=initialize_events)
+                self.update_label_memory(self.instrucciones_procesadas, callback=self.initialize_events)
 
                 self.message_label.setText("Texto procesado correctamente.")
                 self.message_label.setStyleSheet("color: green;")
@@ -251,6 +225,60 @@ class TextStorageApp(QMainWindow):
             print(f"Error: {e}")
             self.message_label.setText(f"Error al procesar: {e}")
             self.message_label.setStyleSheet("color: red;")
+    def next_text(self):
+        self.text_storage = self.reconocer_texto()
+        try:
+            resultado = self.comp.separador(self.text_storage)
+            mp=self.mp.size()
+            if resultado and mp !=0:
+                self.borrar_interfaz()
+                self.control_unit.reset()   
+                instrucciones_raw, operandos_raw = resultado
+                instrucciones_procesadas = []
+                for i in range(len(instrucciones_raw)):
+                    instruccion = self.comp.tipoinstruccion(instrucciones_raw[i])
+                    operandos = self.comp.convertir_comaflotante(operandos_raw[i])
+                    instrucciones_procesadas.append(instruccion + operandos[0] + operandos[1])
+
+                # Actualizar memoria de programa y luego inicializar eventos
+                self.update_label_memory(instrucciones_procesadas, callback=self.initialize_events)
+
+                self.message_label.setText("Texto procesado correctamente.")
+                self.message_label.setStyleSheet("color: green;")
+            else:
+                self.message_label.setText("No habia texto anterior utiliza el boton guardar texto")
+                self.message_label.setStyleSheet("color: red;")
+        except Exception as e:
+            print(f"Error: {e}")
+            self.message_label.setText(f"Error al procesar: {e}")
+            self.message_label.setStyleSheet("color: red;")
+    def initialize_events(self):
+            """
+            Inicializa los eventos de `ControlUnit` después de cargar la memoria.
+            """
+            #try:
+            for i, instruccion in enumerate(self.instrucciones_procesadas):
+                self.mp.write(number_to_binary(i, 28), instruccion)
+            EventBus.set_debug(True)
+            self.control_unit.run(mode=ControlUnitMode.RUN, delay=0.5)
+            self.imprimir_eventos()
+            #except Exception as e:
+                #print(f"Error al inicializar CPU: {e}")
+                #self.message_label.setText(f"Error al inicializar CPU: {e}")
+                #self.message_label.setStyleSheet("color: red;")
+    def reconocer_texto(self):
+            """
+            Procesa el texto del cuadro de texto y lo carga en memoria,
+            actualizando primero las etiquetas antes de inicializar los eventos.
+            """
+            raw_text = self.text_box.toPlainText().strip()
+            if not raw_text:
+                self.message_label.setText("El cuadro de texto está vacío.")
+                self.message_label.setStyleSheet("color: red;")
+                return
+
+            self.text_storage = raw_text.splitlines()
+            return self.text_storage
     
     def update_label_memory(self, memory, callback=None):
         """
@@ -280,7 +308,21 @@ class TextStorageApp(QMainWindow):
         self.memory_timer = QtCore.QTimer()
         self.memory_timer.timeout.connect(update_label)
         self.memory_timer.start(100)  # Intervalo de 100ms para actualizaciones
-
+    def borrar_interfaz(self):
+        self.operando_a.setText("operando a: none")
+        self.operando_b.setText("operando b: none")
+        self.output.setText("output: None")
+        self.pc.setText("PC: 0000000000000000000000000000")
+        self.mar.setText("MAR: None")
+        self.mbr.setText("MBR: None")
+        self.ir.setText("IR: None")
+        for i in range(10):
+            self.registros_memory_labels[i].setText(f"{i}: None")
+        for i in range(6):
+            self.data_memory_labels[i].setText(f"{i}: None")
+        for i in range(6):
+            self.program_memory_labels[i].setText(f"{i:02}: None")
+        
                 
     # Método para registros
     def handle_bus_event(self, metadata):
@@ -339,7 +381,6 @@ class TextStorageApp(QMainWindow):
         self.text_storage.append(lista)
     def imprimir_eventos(self):
         print("Imprimiendo eventos")
-        print(len(self.text_storage))
         for i in range(len(self.text_storage)):
             time.sleep(0.5)
             if self.text_storage[i][0] == ResourceType.MAR:

@@ -9,13 +9,15 @@ class ALU:
         
         val = a + b
         val = number_coma_flotante(val)
+        op1 = number_coma_flotante(a)
+        op2 = number_coma_flotante(b)
 
         cls.notify(
             "alu_result",
             {
                 "operation": "add",
-                "operand_1": a,
-                "operand_2": b,
+                "operand_1":  op1,
+                "operand_2": op2,
                 "result": val,
             },
         )
@@ -24,12 +26,13 @@ class ALU:
 
     @classmethod
     def sub(cls, a: float, b: float):
-        val = a -b
+        val = a - b
         val = number_coma_flotante(val)
-
+        op1 = number_coma_flotante(a)
+        op2 = number_coma_flotante(b)
         cls.notify(
             "alu_result",
-            {"operation": "sub", "operand_1": a, "operand_2": b, "result": val},
+            {"operation": "sub", "operand_1": op1, "operand_2": op2, "result": val},
         )
 
         return val
@@ -38,10 +41,12 @@ class ALU:
     def mul(cls, a: float, b: float):
         val = a * b
         val = number_coma_flotante(val)
+        op1 = number_coma_flotante(a)
+        op2 = number_coma_flotante(b)
 
         cls.notify(
             "alu_result",
-            {"operation": "mul", "operand_1": a, "operand_2": b, "result": val},
+            {"operation": "mul", "operand_1": op1, "operand_2": op2, "result": val},
         )
 
         return val
@@ -50,10 +55,12 @@ class ALU:
     def div(cls, a: float, b: float):
         val = a / b
         val = number_coma_flotante(val)
+        op1 = number_coma_flotante(a)
+        op2 = number_coma_flotante(b)
 
         cls.notify(
             "alu_result",
-            {"operation": "div", "operand_1": a, "operand_2": b, "result": val},
+            {"operation": "div", "operand_1": op1, "operand_2": op2, "result": val},
         )
 
         return val

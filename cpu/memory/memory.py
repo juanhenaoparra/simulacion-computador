@@ -40,6 +40,7 @@ class Memory:
 
     def receive(self, change: ResourceChange):
         if change.metadata.get("command") == Commands.FETCH_VALUE:
+            print(self.size())
             value = self.read(change.metadata["address"])
 
             EventBus.notify(
@@ -67,3 +68,6 @@ class Memory:
     def write(self, direction: str, value: str):
         direction_number = binary_to_number(direction)
         self.memory[direction_number] = value
+        
+    def size(self):
+        return len(self.memory)
