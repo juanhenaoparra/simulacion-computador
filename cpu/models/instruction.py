@@ -118,18 +118,6 @@ class InstructionNotImplemented(Exception):
 
 
 class InstructionHandler:
-
-    # Vincula un evento para llenar el objeto `registros`
-    EventBus.subscribe(
-        ResourceType.BUS,
-        lambda change: InstructionHandler.crear_lista_registros(change),
-        lambda change: change.event == "send_command",
-    )
-    @classmethod
-    def crear_lista_registros(cls, change: ResourceChange):
-        if change.metadata["command"] == Commands.STORE_VALUE and change.metadata["type"] == MemoryType.REGISTER:
-            address =change.metadata["address"]
-            value = change.metadata["value"]
     @classmethod
     def handle_alu(cls, instruction: Instruction):
         if len(instruction.operands) != 2:
