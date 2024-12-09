@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QPus
     QTextEdit, QWidget, QGridLayout, QFrame
 )
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QCoreApplication,pyqtSignal, QObject
+from PyQt5.QtCore import Qt, QCoreApplication, QTimer
 from compilador.compilador import Compilador
 from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
 from cpu.memory.memory import Memory, MemoryType
@@ -27,7 +27,6 @@ class TextStorageApp(QMainWindow):
         EventBus.subscribe(ResourceType.MAR,self.crear_lista_eventos,lambda change: change.event == "set_value",)
         EventBus.subscribe(ResourceType.MBR, self.crear_lista_eventos)
         EventBus.subscribe(ResourceType.PC, self.crear_lista_eventos)
-        EventBus.subscribe(ResourceType.IR, self.crear_lista_eventos)
         EventBus.subscribe(ResourceType.BUS, self.crear_lista_eventos, lambda change: change.event == "send_command")
         EventBus.subscribe(ResourceType.ALU,self.crear_lista_eventos)
     def init_ui(self):
@@ -43,13 +42,13 @@ class TextStorageApp(QMainWindow):
         left_frame.setLayout(left_layout)
 
         # Operandos
-        self.operando_a = QLabel("operando a: none")
+        self.operando_a = QLabel("a: none")
         self.operando_a.setAlignment(Qt.AlignCenter)
         self.operando_a.setStyleSheet("background-color: #C8FFFF; padding: 5px;")
         self.operando_a.setFixedSize(200, 50)  # Ancho: 200px, Alto: 50px
         left_layout.addWidget(self.operando_a, 0, 0)  # Fila 0, Columna 0
 
-        self.operando_b = QLabel("operando b: none")
+        self.operando_b = QLabel("b: none")
         self.operando_b.setAlignment(Qt.AlignCenter)
         self.operando_b.setStyleSheet("background-color: #C8FFFF; padding: 5px;")
         self.operando_b.setFixedSize(200, 50)
@@ -231,6 +230,7 @@ class TextStorageApp(QMainWindow):
             resultado = self.comp.separador(self.text_storage)
             mp=self.mp.size()
             if resultado and mp !=0:
+                self.mp.clear()
                 self.borrar_interfaz()
                 self.control_unit.reset()   
                 instrucciones_raw, operandos_raw = resultado
@@ -309,17 +309,16 @@ class TextStorageApp(QMainWindow):
         self.memory_timer.timeout.connect(update_label)
         self.memory_timer.start(100)  # Intervalo de 100ms para actualizaciones
     def borrar_interfaz(self):
-        self.operando_a.setText("operando a: none")
-        self.operando_b.setText("operando b: none")
+        self.operando_a.setText("a: none")
+        self.operando_b.setText("b: none")
         self.output.setText("output: None")
         self.pc.setText("PC: 0000000000000000000000000000")
         self.mar.setText("MAR: None")
         self.mbr.setText("MBR: None")
         self.ir.setText("IR: None")
+        self.alu_label.setText("ALU")
         for i in range(10):
             self.registros_memory_labels[i].setText(f"{i}: None")
-        for i in range(6):
-            self.data_memory_labels[i].setText(f"{i}: None")
         for i in range(6):
             self.program_memory_labels[i].setText(f"{i:02}: None")
         
@@ -342,14 +341,13 @@ class TextStorageApp(QMainWindow):
     def handle_mar_event(self, metadata):
         value = metadata["value"]
         self.mar.setText(f"MAR: {value}")
-        type = metadata["type"]
         QCoreApplication.processEvents()
 
     def handle_mbr_event(self, metadata):
         value = metadata["value"]
-        t = metadata["type"]
         self.mbr.setText(f"MBR: {value}")
         QCoreApplication.processEvents()
+        QTimer.singleShot(500, lambda: self.handle_ir_event(metadata))
 
     def handle_pc_event(self, metadata):
         value = metadata["position"]
@@ -358,21 +356,19 @@ class TextStorageApp(QMainWindow):
         QCoreApplication.processEvents()
 
     def handle_ir_event(self, metadata):
-        codop = metadata["codop"]
-        operands = metadata["operands"]
-        self.ir.setText(f"IR: {codop}")
+        value = metadata["value"]
+        if value!=None:
+            self.ir.setText(f"IR: {value}")
         QCoreApplication.processEvents()
     def handle_alu_event(self, metadata):
-        operation = metadata["operation"]
+        operacion = metadata["operation"]
+        QTimer.singleShot(500, lambda:self.alu_label.setText(f"ALU: {operacion}") )
         operand_1 = metadata["operand_1"]
         operand_2 = metadata["operand_2"]
         result = metadata["result"]
-        time.sleep(0.5)
-        self.operando_a.setText(f"operando a: {operand_1}")
-        time.sleep(0.5)    
-        self.operando_b.setText(f"operando b: {operand_2}")
-        time.sleep(0.5)
-        self.output.setText(f"output: {result}")
+        QTimer.singleShot(500, lambda:self.operando_a.setText(f"a: {operand_1}"))
+        QTimer.singleShot(500, lambda:self.operando_b.setText(f"b: {operand_2}"))
+        QTimer.singleShot(500, lambda:self.output.setText(f"output: {result}"))
         QCoreApplication.processEvents()
     def crear_lista_eventos(self, change: ResourceChange):
         lista = []
@@ -389,8 +385,6 @@ class TextStorageApp(QMainWindow):
                 self.handle_mbr_event(self.text_storage[i][1])
             elif self.text_storage[i][0] == ResourceType.PC:
                 self.handle_pc_event(self.text_storage[i][1])
-            elif self.text_storage[i][0] == ResourceType.IR:
-                self.handle_ir_event(self.text_storage[i][1])
             elif self.text_storage[i][0] == ResourceType.ALU:
                 self.handle_alu_event(self.text_storage[i][1])
             elif self.text_storage[i][0] == ResourceType.BUS:

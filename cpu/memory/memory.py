@@ -68,6 +68,7 @@ class Memory:
     def write(self, direction: str, value: str):
         direction_number = binary_to_number(direction)
         self.memory[direction_number] = value
-        
+    def clear(self):
+        self.memory = {}
     def size(self):
         return len(self.memory)

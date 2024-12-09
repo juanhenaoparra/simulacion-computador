@@ -56,7 +56,6 @@ class ControlUnit:
                 {"position": self.program_counter.get_position_direction()},
             )
 
-            EventBus.reset_listeners()
     def reset(self):
         self.running = True
         self.notify("program_started", None)

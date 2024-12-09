@@ -29,7 +29,7 @@ class Compilador:
 
         Si hay un error en la validación, imprime el error y retorna None.
         """
-        pattern = re.compile(r"^([A-Z]+)\s+((?:\w+|\[\w+\])(?:,\s*(?:\w+|\[\w+\]))*)$")
+        pattern = re.compile(r"^([A-Z]+)\s+((?:\w+|\[\w+\]|\d+\.?\d*)(?:,\s*(?:\w+|\[\w+\]|\d+\.?\d*))*)$")
         instrucciones = []
         operandos_list = []
 
