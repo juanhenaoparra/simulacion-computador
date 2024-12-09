@@ -256,16 +256,16 @@ class TextStorageApp(QMainWindow):
             """
             Inicializa los eventos de `ControlUnit` después de cargar la memoria.
             """
-            #try:
-            for i, instruccion in enumerate(self.instrucciones_procesadas):
-                self.mp.write(number_to_binary(i, 28), instruccion)
-            EventBus.set_debug(True)
-            self.control_unit.run(mode=ControlUnitMode.RUN, delay=0.5)
-            self.imprimir_eventos()
-            #except Exception as e:
-                #print(f"Error al inicializar CPU: {e}")
-                #self.message_label.setText(f"Error al inicializar CPU: {e}")
-                #self.message_label.setStyleSheet("color: red;")
+            try:
+                for i, instruccion in enumerate(self.instrucciones_procesadas):
+                    self.mp.write(number_to_binary(i, 28), instruccion)
+                EventBus.set_debug(True)
+                self.control_unit.run(mode=ControlUnitMode.RUN, delay=0.5)
+                self.imprimir_eventos()
+            except Exception as e:
+                print(f"Error al inicializar CPU: {e}")
+                self.message_label.setText(f"Error al inicializar CPU: {e}")
+                self.message_label.setStyleSheet("color: red;")
     def reconocer_texto(self):
             """
             Procesa el texto del cuadro de texto y lo carga en memoria,
