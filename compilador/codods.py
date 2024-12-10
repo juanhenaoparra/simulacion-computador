@@ -18,6 +18,7 @@ class Codods:
             "MOVE": "0100",
             "SAVE": "0101",
             "LOAD": "0110",
-            "JUMP": "0111"
+            "JUMP": "0111",
+            "COMP": "1000",
         }
         return instrucciones.get(tipo, "instrucción no válida")

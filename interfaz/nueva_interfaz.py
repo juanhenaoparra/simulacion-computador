@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, # type: ignore
-    QTextEdit, QWidget, QGridLayout, QFrame
+    QTextEdit, QWidget, QGridLayout, QFrame,QApplication
 )
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QCoreApplication, QTimer
@@ -8,9 +8,10 @@ from cpu.control_unit.control_unit import ControlUnit, ControlUnitMode
 from cpu.memory.memory import Memory, MemoryType
 from cpu.memory.register import Register
 from cpu.models.events import EventBus, ResourceChange, ResourceType
-from cpu.models.directions import number_to_binary
+from cpu.models.directions import number_to_binary, interpretar_flotante_a_decimal
 from cpu.bus.bus import Commands, BusType
 import time
+import sys
 
 
 class TextStorageApp(QMainWindow):
@@ -131,8 +132,10 @@ class TextStorageApp(QMainWindow):
         # Right Frame
         right_frame = QFrame()
         right_frame.setStyleSheet("background-color: #1C3A40;")
-        right_layout = QVBoxLayout()
-        right_frame.setLayout(right_layout)
+        self.right_layout = QVBoxLayout()
+        right_frame.setLayout(self.right_layout)
+        
+        
 
         # Data Memory
         data_memory_layout = QGridLayout()
@@ -148,7 +151,7 @@ class TextStorageApp(QMainWindow):
             label.setStyleSheet("background-color: #C8FFFF; padding: 5px;")
             data_memory_layout.addWidget(label, i+1 , 0 )
             self.data_memory_labels.append(label)
-        right_layout.addWidget(data_memory_frame)
+        self.right_layout.addWidget(data_memory_frame)
 
         # Program Memory
         program_memory_layout = QGridLayout()
@@ -164,7 +167,7 @@ class TextStorageApp(QMainWindow):
             label.setStyleSheet("background-color: #C8FFFF; padding: 5px;")
             program_memory_layout.addWidget(label, i+1, 0)
             self.program_memory_labels.append(label)
-        right_layout.addWidget(program_memory_frame)
+        self.right_layout.addWidget(program_memory_frame)
 
         # Text and Buttons
         text_frame = QFrame()
@@ -234,6 +237,7 @@ class TextStorageApp(QMainWindow):
             mp=self.mp.size()
             if resultado and mp !=0:
                 self.mp.clear()
+                self.mr.clear()
                 self.borrar_interfaz()
                 self.control_unit.reset()   
                 instrucciones_raw, operandos_raw = resultado
@@ -338,7 +342,10 @@ class TextStorageApp(QMainWindow):
                 address = metadata["address"]
                 value = metadata["value"]
                 address = int(address, 2)
-                self.data_memory_labels[address].setText(f"{address}: {value}")
+                if address == 6:
+                   self.imprimir_valores(value)
+                elif address <= 6:
+                    self.data_memory_labels[address].setText(f"{address}: {value}")
         QCoreApplication.processEvents()
     # Método para registros
     def handle_mar_event(self, metadata):
@@ -393,4 +400,24 @@ class TextStorageApp(QMainWindow):
             elif self.text_storage[i][0] == ResourceType.BUS:
                 self.handle_bus_event(self.text_storage[i][1])
             else:
-                print("Error")          
+                print("Error")
+    def imprimir_valores(self, resultado: str): 
+        #salida codificada 
+        self.salida_codificada_layout = QGridLayout()
+        salida_codificada_frame = QFrame()
+        salida_codificada_frame.setStyleSheet("background-color: #32CD32;")
+        salida_codificada_frame.setLayout(self.salida_codificada_layout)
+        self.right_layout.addWidget(salida_codificada_frame)
+
+        # Usar la función existente para interpretar los valores
+        resultado_decimal = interpretar_flotante_a_decimal(resultado)
+         # Crear QLabel para cada valor
+        label_resultado = QLabel(f"Resultado: {resultado_decimal}", self)
+
+
+        # Estilo y alineación
+        for label in [label_resultado]:
+            label.setStyleSheet("font-size: 14px;")
+            label.setAlignment(Qt.AlignCenter)
+            self.salida_codificada_layout.addWidget(label)
+        

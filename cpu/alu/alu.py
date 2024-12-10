@@ -64,6 +64,19 @@ class ALU:
         )
 
         return val
+    @classmethod
+    def comp(cls, a: float, b: float):
+        val = a - b
+        val = number_coma_flotante(val)
+        op1 = number_coma_flotante(a)
+        op2 = number_coma_flotante(b)
+
+        cls.notify(
+            "alu_result",
+            {"operation": "sub", "operand_1": op1, "operand_2": op2, "result": val},
+        )
+
+        return val
 
     @classmethod
     def notify(cls, event: str, metadata: dict):

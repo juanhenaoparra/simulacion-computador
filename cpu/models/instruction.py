@@ -33,6 +33,7 @@ class CodOp(str, Enum):
     SAVE = "0101"
     LOAD = "0110"
     JUMP = "0111"
+    COMP = "1000"
 
 
 class OperandDirection(str, Enum):
@@ -129,7 +130,7 @@ class InstructionHandler:
             )
 
         operand_1 = instruction.operands[0].get_cached_value()
-        operand_2 = instruction.operands[1].value
+        operand_2 = instruction.operands[1].get_cached_value()
         operand_1 = interpretar_flotante_a_decimal(operand_1)
         operand_2 = interpretar_flotante_a_decimal(operand_2)
         
@@ -143,6 +144,8 @@ class InstructionHandler:
             result = ALU.mul(operand_1, operand_2)
         elif instruction.codop == CodOp.DIV:
             result = ALU.div(operand_1, operand_2)
+        elif instruction.codop == CodOp.COMP:
+            result = ALU.comp(operand_1, operand_2)
         else:
             raise InstructionNotImplemented(
                 f"La ALU no implementa la operación {instruction.codop}"
