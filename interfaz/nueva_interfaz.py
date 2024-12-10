@@ -367,7 +367,7 @@ class TextStorageApp(QMainWindow):
 
     def handle_ir_event(self, metadata):
         value = metadata["value"]
-        if value!=None:
+        if value!=None and len(value) == 64:
             self.ir.setText(f"IR: {value}")
         QCoreApplication.processEvents()
     def handle_alu_event(self, metadata):
